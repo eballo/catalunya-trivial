@@ -2,6 +2,7 @@ window.onload = function () {
    
     var questionArea = document.getElementsByClassName('questions')[0];
     var imageArea    = document.getElementsByClassName('image')[0];
+    var explanationArea = document.getElementsByClassName('explanation')[0];
     var answerArea   = document.getElementsByClassName('answers')[0];
     var checker      = document.getElementsByClassName('checker')[0];
     var current      = 0;
@@ -67,12 +68,25 @@ window.onload = function () {
         loadAnswers(current);
       } else {
         questionArea.innerHTML = 'Final';
+        explanationArea.innerHTML = '';
         imageArea.innerHTML = ''
         answerArea.innerHTML = '';
       }
                               
     };
   }
+  
+    function showExplanation(){
+        
+        var explanation = questions[current].explanation;
+                
+        explanationArea.innerHTML = '';
+        explanationArea.innerHTML = explanation;
+        
+        setTimeout(function(){
+            explanationArea.innerHTML = '';
+        },2000);
+    }
   
   function addChecker(bool) {
   // This function adds a div element to the page
@@ -91,6 +105,10 @@ window.onload = function () {
       createDiv.className += 'false';
       checker.appendChild(createDiv);
     }
+  }
+    
+  function initializeChecker(){
+      
   }
   
   
