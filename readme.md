@@ -9,6 +9,9 @@ JavaScript Quiz for [Catalunya Medieval](http://www.catalunyamedieval.es). Just 
 ## How to
 Play a Quiz game reading a json file. Easy to change and configure.
 
+## Demo
+- [version 1.1] (http://trivial.catalunyamedieval.es)
+
 ## Versions
 - 1.0 - version based on [http://codingpen.com](http://codingpen.com/2016/02/13/make-a-quiz-with-pure-javascript/)
 - 1.1 - added json functionality.
