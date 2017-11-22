@@ -69,9 +69,9 @@ body, html {
   margin: 0 auto;
 }
 
-.correct, .false {
+.correct, .false, .empty {
   background-color: #109D59;
-  width: 60px;
+  width: 30px;
   height: 30px;
   line-height: 30px;
   padding-left: 4px;
@@ -82,4 +82,8 @@ body, html {
 
 .false {
   background-color: #DC4437;
+}
+
+.empty {
+  background-color: blue;
 }
