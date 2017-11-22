@@ -22,8 +22,10 @@ Easy to change and configure.
 - added json functionality.
 
 == 2.0 ==
-- Add cookies
-- Add sound
+- add npm & gulp
+- Add js-cookie dependency
 
+- Add sound
+- Add big image background
 - 30 Questions
 - Multilanguage
