@@ -1,6 +1,7 @@
 //import the necessary gulp plugins
 var gulp = require('gulp'),
   uglify = require("gulp-uglify");
+  watch = require("gulp-watch");
 
 // Gulp plumber error handler
 var onError = function(err) {
@@ -18,6 +19,11 @@ gulp.task('minify-js', function() {
 gulp.task('copy-css', function () {
     gulp.src('./src/css/*')
         .pipe(gulp.dest('./assets/css/'));
+});
+
+// Watch
+gulp.task('watch', function() {
+    gulp.watch('src/**/*.js', ['minify-js'])
 });
 
 // Lets us type "gulp" on the command line and run all of our tasks

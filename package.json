@@ -28,6 +28,7 @@
     "js-cookie": "^2.2.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.1"
+    "gulp": "^3.9.1",
+    "gulp-watch": "^4.3.11"
   }
 }

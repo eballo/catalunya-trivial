@@ -14,12 +14,10 @@ window.onload = function() {
   function getCurrentQuestion() {
 
     if (Cookies.get('trivial')) {
-      console.log('tenim cookie!');
       var val = JSON.parse(Cookies.get('trivial'));
       current = val.curr;
       answerArray = val.arr;
     } else {
-      console.log('no cookie');
       current = 0;
       answerArray.fill(-1); // Initialize with -1
     }
@@ -85,6 +83,9 @@ window.onload = function() {
    */
   function checkAnswer(i, arr) {
 
+    if (current != 0) {
+      playAudio('click');
+    }
 
     return function() {
       var givenAnswer = i + 1;
@@ -100,10 +101,9 @@ window.onload = function() {
         current += 1;
 
         var trivialCookie = '{ "curr" : ' + current + ', "arr" : [' + answerArray + '] }';
+
         //Set Cookie
         Cookies.set('trivial', trivialCookie);
-
-        console.log(answerArray);
 
         loadQuestion(current);
         loadAnswers(current);
@@ -117,6 +117,8 @@ window.onload = function() {
         answerArea.innerHTML = '';
 
         loadTotal(current);
+
+        finalSound();
 
         //Remove cookie
         Cookies.remove('trivial');
@@ -179,16 +181,35 @@ window.onload = function() {
   }
 
   function loadCheckers() {
-    console.log(answerArray);
     for (var i = 0; i < answerArray.length; i += 1) {
-      console.log(answerArray[i]);
       updateChecker(i, answerArray[i]);
     }
   }
 
   function loadTotal(current) {
-      initializeChecks();
-      loadCheckers();
+    initializeChecks();
+    loadCheckers();
+  }
+
+  function playAudio(name) {
+    var audio = new Audio('assets/sound/' + name + '.mp3');
+    audio.play();
+  }
+
+  function finalSound() {
+    var score = 0;
+    for (var i = 0; i < answerArray.length; i += 1) {
+      score += answerArray[i];
+    }
+    console.log(score);
+
+    if (score == 0) {
+      playAudio('fart');
+    } else if (score < 5) {
+      playAudio('scream');
+    } else if (score > 5) {
+      playAudio('magic');
+    }
   }
 
   //Check if the current value in the cookie is set
