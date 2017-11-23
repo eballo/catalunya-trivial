@@ -24,8 +24,10 @@ Easy to change and configure.
 == 2.0 ==
 - add npm & gulp
 - Add js-cookie dependency
+- Add sound (click, fart, magic, scream)
+- Add final score
 
-- Add sound
 - Add big image background
 - 30 Questions
+- Refactor code in classes
 - Multilanguage

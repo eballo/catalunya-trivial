@@ -23,7 +23,8 @@ gulp.task('copy-css', function () {
 
 // Watch
 gulp.task('watch', function() {
-    gulp.watch('src/**/*.js', ['minify-js'])
+    gulp.watch('src/**/*.js', ['minify-js']);
+    gulp.watch('src/css/*', ['copy-css']);
 });
 
 // Lets us type "gulp" on the command line and run all of our tasks

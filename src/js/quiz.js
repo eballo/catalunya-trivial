@@ -201,16 +201,48 @@ window.onload = function() {
     for (var i = 0; i < answerArray.length; i += 1) {
       score += answerArray[i];
     }
-    console.log(score);
+
+    playAudio('magic');
+
+    countUp(score*100);
 
     if (score == 0) {
       playAudio('fart');
     } else if (score < 5) {
       playAudio('scream');
     } else if (score > 5) {
-      playAudio('magic');
+      playAudio('applause');
     }
   }
+
+  function countUp(count) {
+    var div_by = 100,
+      speed = Math.round(count / div_by),
+      run_count = 1,
+      int_speed = 24;
+      
+      var scoreArea = document.createElement('div');
+      scoreArea.className += 'score-text';
+      explanationArea.appendChild(scoreArea);
+      scoreArea.innerHTML="Puntuació:";
+
+      answerArea.className +=' score';
+
+    var int = setInterval(function() {
+      if (run_count < div_by) {
+        answerArea.innerHTML=(speed * run_count);
+        run_count++;
+      } else if (parseInt(answerArea.textContent) < count) {
+        var curr_count = parseInt(answerArea.textContent) + 1;
+        answerArea.innerHTML=(curr_count);
+      } else {
+        clearInterval(int);
+      }
+    }, int_speed);
+
+  }
+
+
 
   //Check if the current value in the cookie is set
   getCurrentQuestion();
