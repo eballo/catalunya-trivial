@@ -26,8 +26,9 @@ Easy to change and configure.
 - Add js-cookie dependency
 - Add sound (click, fart, magic, scream)
 - Add final score
-
 - Add big image background
+
 - 30 Questions
+- Add explanation text
 - Refactor code in classes
 - Multilanguage

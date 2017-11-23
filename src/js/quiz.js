@@ -88,6 +88,7 @@ window.onload = function() {
     }
 
     return function() {
+
       var givenAnswer = i + 1;
       var correctAnswer = questions[current].correct;
 
@@ -128,16 +129,22 @@ window.onload = function() {
     };
   }
 
+  /**
+   * show the explanation
+   */
   function showExplanation() {
 
     var explanation = questions[current].explanation;
 
-    explanationArea.innerHTML = '';
-    explanationArea.innerHTML = explanation;
 
+    console.log('before');
     setTimeout(function() {
       explanationArea.innerHTML = '';
-    }, 2000);
+      explanationArea.innerHTML = explanation;
+
+    }, 600);
+    explanationArea.innerHTML = '';
+    console.log('after');
   }
 
   /**
@@ -157,6 +164,9 @@ window.onload = function() {
 
   }
 
+  /**
+   * update the checkers
+   */
   function updateChecker(i, bool) {
 
     var checkerElement = document.getElementById("checker-" + (i + 1));
@@ -180,22 +190,34 @@ window.onload = function() {
     }
   }
 
+  /**
+   * Load load and update the checkers
+   */
   function loadCheckers() {
     for (var i = 0; i < answerArray.length; i += 1) {
       updateChecker(i, answerArray[i]);
     }
   }
 
+  /**
+   * Load the total
+   */
   function loadTotal(current) {
     initializeChecks();
     loadCheckers();
   }
 
+  /**
+   * Help functio for the sound
+   */
   function playAudio(name) {
     var audio = new Audio('assets/sound/' + name + '.mp3');
     audio.play();
   }
 
+  /**
+   * Final screen sound
+   */
   function finalSound() {
     var score = 0;
     for (var i = 0; i < answerArray.length; i += 1) {
@@ -204,6 +226,7 @@ window.onload = function() {
 
     playAudio('magic');
 
+    //print the score with animation
     countUp(score*100);
 
     if (score == 0) {
@@ -215,12 +238,15 @@ window.onload = function() {
     }
   }
 
+  /**
+   * Count up function for the final score
+   */
   function countUp(count) {
     var div_by = 100,
       speed = Math.round(count / div_by),
       run_count = 1,
       int_speed = 24;
-      
+
       var scoreArea = document.createElement('div');
       scoreArea.className += 'score-text';
       explanationArea.appendChild(scoreArea);
@@ -239,10 +265,7 @@ window.onload = function() {
         clearInterval(int);
       }
     }, int_speed);
-
   }
-
-
 
   //Check if the current value in the cookie is set
   getCurrentQuestion();
@@ -251,6 +274,5 @@ window.onload = function() {
   loadQuestion(current);
   loadAnswers(current);
   loadTotal(current);
-
 
 };
