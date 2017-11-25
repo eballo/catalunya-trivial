@@ -6,20 +6,18 @@ window.onload = function() {
   var answerArea = document.getElementsByClassName('answers')[0];
   var checker = document.getElementsByClassName('checker')[0];
   var totalArea = document.getElementsByClassName('total')[0];
-  var answerArray = new Array(Object.keys(questions).length);
+  var answerArray = new Array();
   var current;
 
-  //Cookies.remove('trivial');
+  Cookies.remove('tza');
 
   function getCurrentQuestion() {
-
-    if (Cookies.get('trivial')) {
-      var val = JSON.parse(Cookies.get('trivial'));
+    if (Cookies.get('tza')) {
+      var val = JSON.parse(Cookies.get('tza'));
       current = val.curr;
       answerArray = val.arr;
     } else {
       current = 0;
-      answerArray.fill(-1); // Initialize with -1
     }
   }
 
@@ -31,22 +29,31 @@ window.onload = function() {
    */
   function loadQuestion(curr) {
 
-    var question = questions[curr].question;
-    var image = questions[curr].image;
-
-    var total = Object.keys(questions).length;
+    //var question = questions[curr].questions
 
     questionArea.innerHTML = '';
-    questionArea.innerHTML = question;
+    questionArea.innerHTML = "Question ?";
+    //totalArea.innerHTML = (curr + 1) + ' / ' + total;
 
-    if (image != "") {
-      imageArea.innerHTML = '';
-      imageArea.innerHTML = '<img src="' + image + '" height="200" width="200" >';
-    } else {
-      imageArea.innerHTML = '';
-    }
+  }
 
-    totalArea.innerHTML = (curr + 1) + ' / ' + total;
+  /**
+   *
+   */
+  function getAnswersRestCall(curr) {
+    var xhReq = new XMLHttpRequest();
+    xhReq.open("GET", "http://localhost:8080/api/help-questions/level/"+curr, false);
+    xhReq.send(null);
+    var serverResponse = xhReq.responseText;
+
+    //alert(serverResponse); // Shows "15"
+    answers = JSON.parse(serverResponse);
+
+    answers.forEach(function(answer) {
+      console.log(answer.description);
+    });
+
+    return answers;
   }
 
   /**
@@ -58,13 +65,13 @@ window.onload = function() {
    */
   function loadAnswers(curr) {
 
-    var answers = questions[curr].choices;
+    var answers = getAnswersRestCall(curr);
 
     answerArea.innerHTML = '';
 
     for (var i = 0; i < answers.length; i += 1) {
       var createDiv = document.createElement('div'),
-        text = document.createTextNode(answers[i]);
+        text = document.createTextNode(answers[i].description);
 
       createDiv.appendChild(text);
       createDiv.addEventListener("click", checkAnswer(i, answers));
@@ -83,46 +90,48 @@ window.onload = function() {
    */
   function checkAnswer(i, arr) {
 
-    if (current != 0) {
-      playAudio('click');
-    }
-
     return function() {
 
       var givenAnswer = i + 1;
-      var correctAnswer = questions[current].correct;
 
-      if (givenAnswer === correctAnswer) {
-        answerArray[current] = 1;
-      } else {
-        answerArray[current] = 0;
-      }
-
-      if (current < Object.keys(questions).length - 1) {
+      //Check if there are more answeres
+      var answers = getAnswersRestCall(arr[i].parent);
+      console.log(answers.length);
+      if(answers.length>0){
         current += 1;
 
-        var trivialCookie = '{ "curr" : ' + current + ', "arr" : [' + answerArray + '] }';
+        answerArray.push(i+1);
+
+        var tzaCookie = '{ "curr" : ' + current + ', "arr" : [' + arr + '] }';
 
         //Set Cookie
-        Cookies.set('trivial', trivialCookie);
+        Cookies.set('tza', tzaCookie);
 
         loadQuestion(current);
-        loadAnswers(current);
-        loadTotal(current);
+        loadAnswers(arr[i].parent);
+        //loadTotal(current);
 
       } else {
+        console.log('final');
+
+        answerArray.push(i+1);
 
         questionArea.innerHTML = 'Final';
         explanationArea.innerHTML = '';
         imageArea.innerHTML = ''
-        answerArea.innerHTML = '';
+        var final = '';
+        console.log(answerArray);
+        console.log(answerArray.length);
+        for (var x = 0; x < answerArray.length; x += 1) {
+          console.log(answerArray[x]);
+          final = final.concat(answerArray[x]+ ', ');
+        }
 
-        loadTotal(current);
-
-        finalSound();
+        answerArea.innerHTML = ''+final;
+        //loadTotal(current);
 
         //Remove cookie
-        Cookies.remove('trivial');
+        Cookies.remove('tza');
 
       }
 
@@ -227,7 +236,7 @@ window.onload = function() {
     playAudio('magic');
 
     //print the score with animation
-    countUp(score*100);
+    countUp(score * 100);
 
     if (score == 0) {
       playAudio('fart');
@@ -247,20 +256,20 @@ window.onload = function() {
       run_count = 1,
       int_speed = 24;
 
-      var scoreArea = document.createElement('div');
-      scoreArea.className += 'score-text';
-      explanationArea.appendChild(scoreArea);
-      scoreArea.innerHTML="Puntuació:";
+    var scoreArea = document.createElement('div');
+    scoreArea.className += 'score-text';
+    explanationArea.appendChild(scoreArea);
+    scoreArea.innerHTML = "Puntuació:";
 
-      answerArea.className +=' score';
+    answerArea.className += ' score';
 
     var int = setInterval(function() {
       if (run_count < div_by) {
-        answerArea.innerHTML=(speed * run_count);
+        answerArea.innerHTML = (speed * run_count);
         run_count++;
       } else if (parseInt(answerArea.textContent) < count) {
         var curr_count = parseInt(answerArea.textContent) + 1;
-        answerArea.innerHTML=(curr_count);
+        answerArea.innerHTML = (curr_count);
       } else {
         clearInterval(int);
       }
@@ -273,6 +282,6 @@ window.onload = function() {
   // Start the quiz right away
   loadQuestion(current);
   loadAnswers(current);
-  loadTotal(current);
+  //loadTotal(current);
 
 };
