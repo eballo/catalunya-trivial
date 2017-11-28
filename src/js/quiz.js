@@ -1,21 +1,21 @@
+;
 window.onload = function() {
 
   var questionArea = document.getElementsByClassName('questions')[0];
-  var imageArea = document.getElementsByClassName('image')[0];
-  var explanationArea = document.getElementsByClassName('explanation')[0];
   var answerArea = document.getElementsByClassName('answers')[0];
-  var checker = document.getElementsByClassName('checker')[0];
-  var totalArea = document.getElementsByClassName('total')[0];
   var answerArray = new Array();
   var current;
+  var currentQuestion = 0;
 
-  Cookies.remove('tza');
+  //Cookies.remove('tza');
 
   function getCurrentQuestion() {
     if (Cookies.get('tza')) {
       var val = JSON.parse(Cookies.get('tza'));
       current = val.curr;
       answerArray = val.arr;
+      console.log(current);
+      console.log(answerArray);
     } else {
       current = 0;
     }
@@ -42,7 +42,7 @@ window.onload = function() {
    */
   function getAnswersRestCall(curr) {
     var xhReq = new XMLHttpRequest();
-    xhReq.open("GET", "http://localhost:8080/api/help-questions/level/"+curr, false);
+    xhReq.open("GET", "http://localhost:8080/api/help-questions/level/" + curr, false);
     xhReq.send(null);
     var serverResponse = xhReq.responseText;
 
@@ -56,6 +56,11 @@ window.onload = function() {
     return answers;
   }
 
+  function getQuestionRestCall(curr) {
+    var q = [true,false,false,true,true];
+    return q[curr];
+  }
+
   /**
    *
    * This function loads all the possible answers of the given question
@@ -65,11 +70,23 @@ window.onload = function() {
    */
   function loadAnswers(curr) {
 
+    var question = getQuestionRestCall(currentQuestion);
     var answers = getAnswersRestCall(curr);
+    console.log(currentQuestion)
+    console.log(question);
+    //check type
+    if (question) {
+      answerLogic();
+    } else {
+      checkBoxLogic();
+    }
+  }
 
+  function answerLogic() {
     answerArea.innerHTML = '';
 
     for (var i = 0; i < answers.length; i += 1) {
+
       var createDiv = document.createElement('div'),
         text = document.createTextNode(answers[i].description);
 
@@ -77,6 +94,81 @@ window.onload = function() {
       createDiv.addEventListener("click", checkAnswer(i, answers));
 
       answerArea.appendChild(createDiv);
+    }
+  }
+
+  function checkBoxLogic() {
+    answerArea.innerHTML = '';
+
+    for (var i = 0; i < answers.length; i += 1) {
+
+      console.log(answers);
+      var createDiv = document.createElement('div');
+
+      var checkbox = document.createElement('input');
+      checkbox.type = "checkbox";
+      checkbox.name = "name";
+      checkbox.value = i + 1;
+      checkbox.id = "checkbox-" + i;
+
+      createDiv.appendChild(checkbox);
+
+      var label = document.createElement('label')
+      label.htmlFor = "id";
+      label.appendChild(document.createTextNode(answers[i].description));
+      //label.addEventListener("click", selectCheckBox(i));
+
+      createDiv.appendChild(label);
+
+      answerArea.appendChild(createDiv);
+
+
+    }
+
+    var createContinueDiv = document.createElement('div'),
+      text = document.createTextNode("Continue");
+
+    createContinueDiv.appendChild(text);
+    createContinueDiv.addEventListener("click", checkCheckBox(answers[0].parent, answers.length));
+
+    answerArea.appendChild(createContinueDiv);
+  }
+
+  function getValueCheckBox() {
+    var valueToReturn = '';
+    for (var i = 0; i < answers.length; i += 1) {
+      var ele = document.getElementById("checkbox-" + i)
+      if (ele.checked == true) {
+        valueToReturn += ele.value;
+      }
+    }
+    return valueToReturn;
+  }
+
+  function checkCheckBox(parent, answersLenght) {
+
+    return function() {
+      var valueCheck = getValueCheckBox(answersLenght);
+      currentQuestion = currentQuestion + 1;
+
+      var answers = getAnswersRestCall(parent);
+      console.log(answers.length);
+      if (answers.length > 0) {
+        current += 1;
+
+        answerArray.push(valueCheck);
+
+        var tzaCookie = '{ "curr" : ' + parent + ', "arr" : [' + answerArray + '] }';
+
+        //Set Cookie
+        Cookies.set('tza', tzaCookie);
+
+        loadQuestion(current);
+        loadAnswers(parent);
+
+      } else {
+        theEnd(current);
+      }
     }
   }
 
@@ -93,187 +185,50 @@ window.onload = function() {
     return function() {
 
       var givenAnswer = i + 1;
+      currentQuestion = currentQuestion + 1;
 
       //Check if there are more answeres
       var answers = getAnswersRestCall(arr[i].parent);
       console.log(answers.length);
-      if(answers.length>0){
+      if (answers.length > 0) {
         current += 1;
 
-        answerArray.push(i+1);
+        answerArray.push(i + 1);
 
-        var tzaCookie = '{ "curr" : ' + current + ', "arr" : [' + arr + '] }';
+        var tzaCookie = '{ "curr" : ' + arr[i].parent + ', "arr" : [' + answerArray + '] }';
 
         //Set Cookie
         Cookies.set('tza', tzaCookie);
 
         loadQuestion(current);
         loadAnswers(arr[i].parent);
-        //loadTotal(current);
 
       } else {
-        console.log('final');
-
-        answerArray.push(i+1);
-
-        questionArea.innerHTML = 'Final';
-        explanationArea.innerHTML = '';
-        imageArea.innerHTML = ''
-        var final = '';
-        console.log(answerArray);
-        console.log(answerArray.length);
-        for (var x = 0; x < answerArray.length; x += 1) {
-          console.log(answerArray[x]);
-          final = final.concat(answerArray[x]+ ', ');
-        }
-
-        answerArea.innerHTML = ''+final;
-        //loadTotal(current);
-
-        //Remove cookie
-        Cookies.remove('tza');
-
+        theEnd(i);
       }
 
     };
   }
 
-  /**
-   * show the explanation
-   */
-  function showExplanation() {
+  function theEnd(i) {
+    console.log('final');
 
-    var explanation = questions[current].explanation;
+    answerArray.push(i + 1);
 
+    questionArea.innerHTML = 'Final';
 
-    console.log('before');
-    setTimeout(function() {
-      explanationArea.innerHTML = '';
-      explanationArea.innerHTML = explanation;
-
-    }, 600);
-    explanationArea.innerHTML = '';
-    console.log('after');
-  }
-
-  /**
-   * This function adds a div element to the page
-   * Used to see if it was correct or false
-   */
-  function addDefaultChecker(i) {
-
-    var createDiv = document.createElement('div'),
-      txt = document.createTextNode(i + 1);
-
-    createDiv.setAttribute("id", "checker-" + (i + 1));
-    createDiv.appendChild(txt);
-
-    createDiv.className += 'empty';
-    checker.appendChild(createDiv);
-
-  }
-
-  /**
-   * update the checkers
-   */
-  function updateChecker(i, bool) {
-
-    var checkerElement = document.getElementById("checker-" + (i + 1));
-
-    if (bool == 1) {
-      checkerElement.className = 'correct';
-    } else if (bool == 0) {
-      checkerElement.className = 'false';
-    }
-  }
-
-  /**
-   * Initialize checker with emtpy value
-   */
-  function initializeChecks() {
-    var checkerElement = document.getElementById("checker-1");
-    if (!checkerElement) {
-      for (var i = 0; i < answerArray.length; i += 1) {
-        addDefaultChecker(i);
-      }
-    }
-  }
-
-  /**
-   * Load load and update the checkers
-   */
-  function loadCheckers() {
-    for (var i = 0; i < answerArray.length; i += 1) {
-      updateChecker(i, answerArray[i]);
-    }
-  }
-
-  /**
-   * Load the total
-   */
-  function loadTotal(current) {
-    initializeChecks();
-    loadCheckers();
-  }
-
-  /**
-   * Help functio for the sound
-   */
-  function playAudio(name) {
-    var audio = new Audio('assets/sound/' + name + '.mp3');
-    audio.play();
-  }
-
-  /**
-   * Final screen sound
-   */
-  function finalSound() {
-    var score = 0;
-    for (var i = 0; i < answerArray.length; i += 1) {
-      score += answerArray[i];
+    var final = '';
+    console.log(answerArray);
+    console.log(answerArray.length);
+    for (var x = 0; x < answerArray.length; x += 1) {
+      console.log(answerArray[x]);
+      final = final.concat(answerArray[x] + ', ');
     }
 
-    playAudio('magic');
+    answerArea.innerHTML = '' + final;
 
-    //print the score with animation
-    countUp(score * 100);
-
-    if (score == 0) {
-      playAudio('fart');
-    } else if (score < 5) {
-      playAudio('scream');
-    } else if (score > 5) {
-      playAudio('applause');
-    }
-  }
-
-  /**
-   * Count up function for the final score
-   */
-  function countUp(count) {
-    var div_by = 100,
-      speed = Math.round(count / div_by),
-      run_count = 1,
-      int_speed = 24;
-
-    var scoreArea = document.createElement('div');
-    scoreArea.className += 'score-text';
-    explanationArea.appendChild(scoreArea);
-    scoreArea.innerHTML = "Puntuació:";
-
-    answerArea.className += ' score';
-
-    var int = setInterval(function() {
-      if (run_count < div_by) {
-        answerArea.innerHTML = (speed * run_count);
-        run_count++;
-      } else if (parseInt(answerArea.textContent) < count) {
-        var curr_count = parseInt(answerArea.textContent) + 1;
-        answerArea.innerHTML = (curr_count);
-      } else {
-        clearInterval(int);
-      }
-    }, int_speed);
+    //Remove cookie
+    Cookies.remove('tza');
   }
 
   //Check if the current value in the cookie is set
@@ -282,6 +237,5 @@ window.onload = function() {
   // Start the quiz right away
   loadQuestion(current);
   loadAnswers(current);
-  //loadTotal(current);
 
 };
