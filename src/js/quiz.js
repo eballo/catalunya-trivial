@@ -4,61 +4,43 @@ window.onload = function() {
   var questionArea = document.getElementsByClassName('questions')[0];
   var answerArea = document.getElementsByClassName('answers')[0];
   var answerArray = new Array();
-  var current;
+  var currentQuestionID = 0;
   var currentQuestion = 0;
 
-  //Cookies.remove('tza');
+  Cookies.remove('tza');
 
   function getCurrentQuestion() {
     if (Cookies.get('tza')) {
       var val = JSON.parse(Cookies.get('tza'));
-      current = val.curr;
+      currentQuestionID = val.curr;
       answerArray = val.arr;
-      console.log(current);
+      console.log(currentQuestionID);
       console.log(answerArray);
     } else {
-      current = 0;
+      currentQuestionID = 0;
     }
   }
 
   /**
    *
-   * This function loads all the question into the questionArea
-   * It grabs the current question based on the 'current'-variable
-   *
    */
-  function loadQuestion(curr) {
-
-    //var question = questions[curr].questions
-
-    questionArea.innerHTML = '';
-    questionArea.innerHTML = "Question ?";
-    //totalArea.innerHTML = (curr + 1) + ' / ' + total;
-
-  }
-
-  /**
-   *
-   */
-  function getAnswersRestCall(curr) {
+  function getQuestionRestCall(questionID) {
     var xhReq = new XMLHttpRequest();
-    xhReq.open("GET", "http://localhost:8080/api/help-questions/level/" + curr, false);
+    xhReq.open("GET", "http://localhost:8080/api/help-questions/" + questionID, false);
     xhReq.send(null);
     var serverResponse = xhReq.responseText;
+    var question = null;
 
-    //alert(serverResponse); // Shows "15"
-    answers = JSON.parse(serverResponse);
+    if (xhReq.status == 200) {
+      question = JSON.parse(serverResponse);
+      console.log(question);
+      var answers = question.helpAnswers
+      answers.forEach(function(answers) {
+        console.log(answers.answer);
+      });
+    }
 
-    answers.forEach(function(answer) {
-      console.log(answer.description);
-    });
-
-    return answers;
-  }
-
-  function getQuestionRestCall(curr) {
-    var q = [true,false,false,true,true];
-    return q[curr];
+    return question;
   }
 
   /**
@@ -68,27 +50,37 @@ window.onload = function() {
    * Every answer is added with an 'onclick'-function
    *
    */
-  function loadAnswers(curr) {
+  function loadQuestionAndAnswers(questionID) {
 
-    var question = getQuestionRestCall(currentQuestion);
-    var answers = getAnswersRestCall(curr);
-    console.log(currentQuestion)
-    console.log(question);
+    var question = getQuestionRestCall(questionID);
+
+    questionArea.innerHTML = '';
+    questionArea.innerHTML = question.question;
+
+    var answers = question.helpAnswers;
+
+    console.log("Current Question : " + currentQuestion)
+    console.log("question " + question.question);
+    console.log("answers " + answers);
+
     //check type
-    if (question) {
-      answerLogic();
+    if (question.qType == 'normal') {
+      answerLogic(question);
     } else {
-      checkBoxLogic();
+      checkBoxLogic(question);
     }
+
   }
 
-  function answerLogic() {
+  function answerLogic(question) {
+    console.log('answerLogic');
     answerArea.innerHTML = '';
+    var answers = question.helpAnswers;
 
     for (var i = 0; i < answers.length; i += 1) {
 
       var createDiv = document.createElement('div'),
-        text = document.createTextNode(answers[i].description);
+        text = document.createTextNode(answers[i].answer);
 
       createDiv.appendChild(text);
       createDiv.addEventListener("click", checkAnswer(i, answers));
@@ -97,12 +89,14 @@ window.onload = function() {
     }
   }
 
-  function checkBoxLogic() {
+  function checkBoxLogic(question) {
+    console.log('checkBoxLogic');
+
     answerArea.innerHTML = '';
+    var answers = question.helpAnswers;
 
     for (var i = 0; i < answers.length; i += 1) {
 
-      console.log(answers);
       var createDiv = document.createElement('div');
 
       var checkbox = document.createElement('input');
@@ -115,7 +109,7 @@ window.onload = function() {
 
       var label = document.createElement('label')
       label.htmlFor = "id";
-      label.appendChild(document.createTextNode(answers[i].description));
+      label.appendChild(document.createTextNode(answers[i].answer));
       //label.addEventListener("click", selectCheckBox(i));
 
       createDiv.appendChild(label);
@@ -129,14 +123,15 @@ window.onload = function() {
       text = document.createTextNode("Continue");
 
     createContinueDiv.appendChild(text);
-    createContinueDiv.addEventListener("click", checkCheckBox(answers[0].parent, answers.length));
+    createContinueDiv.addEventListener("click", checkCheckBox(answers[0].parent, answers));
 
     answerArea.appendChild(createContinueDiv);
   }
 
-  function getValueCheckBox() {
+  function getValueCheckBox(numAnswers) {
+    console.log('getValueCheckBox');
     var valueToReturn = '';
-    for (var i = 0; i < answers.length; i += 1) {
+    for (var i = 0; i < numAnswers; i += 1) {
       var ele = document.getElementById("checkbox-" + i)
       if (ele.checked == true) {
         valueToReturn += ele.value;
@@ -145,29 +140,33 @@ window.onload = function() {
     return valueToReturn;
   }
 
-  function checkCheckBox(parent, answersLenght) {
-
+  function checkCheckBox(parent, answersList) {
+    console.log('checkCheckBox');
     return function() {
-      var valueCheck = getValueCheckBox(answersLenght);
+      var valueCheck = getValueCheckBox(answersList.length);
       currentQuestion = currentQuestion + 1;
 
-      var answers = getAnswersRestCall(parent);
-      console.log(answers.length);
-      if (answers.length > 0) {
-        current += 1;
+      var question = getQuestionRestCall(parent);
+      if (question) {
+        var answers = question.helpAnswers;
 
-        answerArray.push(valueCheck);
+        console.log(answers.length);
+        if (answers.length > 0) {
+          currentQuestionID += 1;
 
-        var tzaCookie = '{ "curr" : ' + parent + ', "arr" : [' + answerArray + '] }';
+          answerArray.push(valueCheck);
 
-        //Set Cookie
-        Cookies.set('tza', tzaCookie);
+          var tzaCookie = '{ "curr" : ' + parent + ', "arr" : [' + answerArray + '] }';
 
-        loadQuestion(current);
-        loadAnswers(parent);
+          //Set Cookie
+          Cookies.set('tza', tzaCookie);
 
+          loadQuestionAndAnswers(parent);
+
+        }
       } else {
-        theEnd(current);
+        answerArray.push(valueCheck);
+        theEnd(currentQuestionID);
       }
     }
   }
@@ -180,7 +179,8 @@ window.onload = function() {
    * If it is: empty the answerArea and let them know it's done.
    *
    */
-  function checkAnswer(i, arr) {
+  function checkAnswer(i, answersList) {
+    console.log('checkAnswer');
 
     return function() {
 
@@ -188,23 +188,28 @@ window.onload = function() {
       currentQuestion = currentQuestion + 1;
 
       //Check if there are more answeres
-      var answers = getAnswersRestCall(arr[i].parent);
-      console.log(answers.length);
-      if (answers.length > 0) {
-        current += 1;
+      var question = getQuestionRestCall(answersList[i].parent);
 
-        answerArray.push(i + 1);
+      if (question) {
+        console.log(question);
+        var answers = question.helpAnswers;
 
-        var tzaCookie = '{ "curr" : ' + arr[i].parent + ', "arr" : [' + answerArray + '] }';
+        console.log(answers.length);
+        if (answers.length > 0) {
+          currentQuestionID += 1;
 
-        //Set Cookie
-        Cookies.set('tza', tzaCookie);
+          answerArray.push(i + 1);
 
-        loadQuestion(current);
-        loadAnswers(arr[i].parent);
+          var tzaCookie = '{ "curr" : ' + answersList[i].parent + ', "arr" : [' + answerArray + '] }';
 
+          //Set Cookie
+          Cookies.set('tza', tzaCookie);
+
+          loadQuestionAndAnswers(answersList[i].parent);
+        }
       } else {
-        theEnd(i);
+        answerArray.push(i + 1);
+        theEnd(currentQuestionID);
       }
 
     };
@@ -212,8 +217,6 @@ window.onload = function() {
 
   function theEnd(i) {
     console.log('final');
-
-    answerArray.push(i + 1);
 
     questionArea.innerHTML = 'Final';
 
@@ -235,7 +238,6 @@ window.onload = function() {
   getCurrentQuestion();
 
   // Start the quiz right away
-  loadQuestion(current);
-  loadAnswers(current);
+  loadQuestionAndAnswers(currentQuestionID);
 
 };
